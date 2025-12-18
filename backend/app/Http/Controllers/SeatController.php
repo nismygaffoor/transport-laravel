@@ -38,19 +38,37 @@ class SeatController extends Controller
             'seat_ids.*' => 'integer|exists:seats,id',
         ]);
 
-        $updated = Seat::whereIn('id', $validated['seat_ids'])
-                       ->where('is_available', true)
-                       ->lockForUpdate()
-                       ->update(['is_available' => false
-                    ]);
+        // Get the seats and check if they're all available
+        $seats = Seat::whereIn('id', $validated['seat_ids'])
+                    ->where('is_available', true)
+                    ->lockForUpdate()
+                    ->get();
 
-        if ($updated === 0) {
+        if ($seats->count() === 0) {
             DB::rollBack();
             return response()->json(['message' => 'No seats updated. Seats might already be booked.'], 400);
         }
 
+        // Update seats to unavailable
+        $updated = Seat::whereIn('id', $validated['seat_ids'])
+                       ->where('is_available', true)
+                       ->update(['is_available' => false]);
+
+        // Update available_seats count in buses table
+        $busId = $seats->first()->bus_id;
+        $bus = Bus::find($busId);
+        
+        if ($bus) {
+            $bus->available_seats = $bus->available_seats - $updated;
+            $bus->save();
+        }
+
         DB::commit();
-        return response()->json(['message' => 'Seats selected successfully'], 200);
+        return response()->json([
+            'message' => 'Seats selected successfully',
+            'updated_seats' => $updated,
+            'bus_available_seats' => $bus->available_seats
+        ], 200);
     } catch (\Exception $e) {
         DB::rollBack();
         Log::error('Error selecting seats:', ['error' => $e->getMessage()]);
