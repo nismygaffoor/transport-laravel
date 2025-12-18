@@ -161,11 +161,10 @@ export function BookingHistory({ bookings, onReview }: BookingHistoryProps) {
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}
-                    className={`h-4 w-4 ${
-                      i < booking.review!.rating
+                    className={`h-4 w-4 ${i < booking.review!.rating
                         ? "fill-yellow-400 text-yellow-400"
                         : "text-gray-300"
-                    }`}
+                      }`}
                   />
                 ))}
               </div>
@@ -196,11 +195,10 @@ export function BookingHistory({ bookings, onReview }: BookingHistoryProps) {
                       className="focus:outline-none"
                     >
                       <Star
-                        className={`h-6 w-6 ${
-                          value <= (hoveredRatings[booking.id] || ratings[booking.id] || 0)
+                        className={`h-6 w-6 ${value <= (hoveredRatings[booking.id] || ratings[booking.id] || 0)
                             ? "fill-yellow-400 text-yellow-400"
                             : "text-gray-300"
-                        }`}
+                          }`}
                       />
                     </button>
                   ))}
