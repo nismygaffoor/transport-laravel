@@ -12,11 +12,10 @@ class Booking extends Model
     protected $fillable = [
         'user_id',
         'bus_id',
-        'route_id',
-        'seat_id', // Assuming the booking is related to a single seat
-        'status', // For example, 'active', 'cancelled', 'completed'
+        'seat_numbers', // Comma-separated seat numbers
+        'total_price', // Total price of the booking
+        'status', // For example, 'confirmed', 'cancelled', 'completed'
         'travel_date', // Date of the journey
-        'price', // Total price of the booking
     ];
 
     /**
@@ -52,18 +51,28 @@ class Booking extends Model
     }
 
     /**
+     * A booking can have one review.
+     */
+    public function review()
+    {
+        return $this->hasOne(Review::class);
+    }
+
+    /**
      * Get the status of the booking.
      */
     public function getStatusAttribute($value)
     {
-        // You can map statuses to meaningful text
+        // Return lowercase status to match frontend expectations
         $statuses = [
-            'active' => 'Active',
-            'cancelled' => 'Cancelled',
-            'completed' => 'Completed',
+            'booked' => 'booked',
+            'confirmed' => 'confirmed',
+            'active' => 'active',
+            'cancelled' => 'cancelled',
+            'completed' => 'completed',
         ];
 
-        return $statuses[$value] ?? 'Unknown';
+        return $statuses[$value] ?? 'unknown';
     }
 
     /**
