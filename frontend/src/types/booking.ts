@@ -6,7 +6,7 @@ export interface Booking {
   totalPrice: number;
   bookingDate: string;
   travelDate: string;
-  status: 'confirmed' | 'cancelled' | 'completed';
+  status: 'booked' | 'confirmed' | 'cancelled' | 'completed';
 }
 
 export interface BookingDetails extends Booking {
