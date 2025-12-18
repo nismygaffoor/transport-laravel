@@ -60,7 +60,6 @@ function App() {
   const handleLoginSuccess = () => {
     setIsLoggedIn(true);
     console.log("Login successful!");
-    // Add additional logic such as redirecting to a different page
   };
 
   return (
@@ -81,9 +80,7 @@ function App() {
             <Route
               path="/booking-confirmation"
               element={
-              // <UserRequireAuth>
            <BookingConfirmationPage />
-              // </UserRequireAuth>
               }
             />
             <Route path="/booking-success" element={<BookingSuccess />} />
