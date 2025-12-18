@@ -78,9 +78,9 @@ export function Profile() {
           },
           review: b.review
             ? {
-                rating: b.review.rating,
-                comment: b.review.comment,
-              }
+              rating: b.review.rating,
+              comment: b.review.comment,
+            }
             : undefined,
         }));
         setBookings(mapped);
