@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { BookingConfirmation } from "../components/booking/BookingConfirmation";
 import { useBooking } from "../hooks/useBooking";
-import { Bus } from "../types/bus";
+import { Bus, Seat } from "../types/bus";
 
 export function BookingConfirmationPage() {
   const location = useLocation();
@@ -12,6 +12,7 @@ export function BookingConfirmationPage() {
   const { busId, selectedSeats, travelDate } = location.state || {};
 
   const [bus, setBus] = useState<Bus | null>(null);
+  const [allSeats, setAllSeats] = useState<Seat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -36,7 +37,21 @@ export function BookingConfirmationPage() {
       }
     };
 
+    const fetchSeats = async () => {
+      try {
+        const response = await fetch(`http://localhost:8000/api/seats?busId=${busId}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch seats");
+        }
+        const data = await response.json();
+        setAllSeats(data);
+      } catch (error) {
+        console.error("Error fetching seats:", error);
+      }
+    };
+
     fetchBusDetails();
+    fetchSeats();
   }, [busId, selectedSeats, navigate]);
 
   const handleConfirmBooking = async () => {
@@ -46,6 +61,22 @@ export function BookingConfirmationPage() {
     }
 
     try {
+      // Convert seat numbers to seat IDs
+      const seatIds = selectedSeats
+        .map((seatNumber: number) => {
+          const seat = allSeats.find((s: Seat) => s.number === seatNumber);
+          return seat ? seat.id : null;
+        })
+        .filter((id: number | null) => id !== null);
+
+      if (seatIds.length === 0) {
+        toast.error("Could not find selected seat IDs. Please try again.");
+        return;
+      }
+
+      console.log("Selected seat numbers:", selectedSeats);
+      console.log("Seat IDs to send:", seatIds);
+
       // Save selected seats in the database
       const response = await fetch("http://localhost:8000/api/seats/select", {
         method: "POST",
@@ -53,34 +84,55 @@ export function BookingConfirmationPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          seat_ids: selectedSeats,
+          seat_ids: seatIds,
         }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save selected seats");
+        const error = await response.json();
+        throw new Error(error.message || "Failed to save selected seats");
       }
-
-      // Confirm the booking
-      const booking = await createBooking({
-        busId,
-        seats: selectedSeats,
-        travelDate,
-      });
 
       // Calculate price details
       const seatPrice = bus.price;
       const serviceFee = selectedSeats.length * 50; // Example fee
       const totalPrice = selectedSeats.length * seatPrice + serviceFee;
 
+      // Get user info
+      const userInfo = JSON.parse(localStorage.getItem("userInfo") || "{}");
+      
+      // Save booking to database
+      const bookingResponse = await fetch("http://localhost:8000/api/bookings", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          user_id: userInfo.id,
+          bus_id: busId,
+          seat_numbers: selectedSeats.join(','),
+          total_price: totalPrice,
+          travel_date: travelDate || new Date().toISOString().split('T')[0],
+        }),
+      });
+
+      if (!bookingResponse.ok) {
+        const error = await bookingResponse.json();
+        throw new Error(error.message || "Failed to create booking");
+      }
+
+      const bookingData = await bookingResponse.json();
+
       // Navigate to success page with booking details
       navigate("/booking-success", {
         state: {
           booking: {
-            ...booking,
+            ...bookingData.booking,
             bus,
+            seats: selectedSeats, // Pass the selected seats array
             totalPrice,
             serviceFee,
+            travelDate: travelDate || new Date().toISOString().split('T')[0],
           },
         },
       });
