@@ -1,6 +1,6 @@
 import { useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Bus, LogOut, Users, BookOpen } from 'lucide-react';
+import { Bus, LogOut, Users, BookOpen } from 'lucide-react';
 import { AdminAuthContext } from '../Context/AdminAuth';
 import { toast } from 'react-toastify';
 
