@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Bus } from "lucide-react";
 // import img from "../../asset/user-interface.png";
@@ -14,6 +14,8 @@ interface NavbarProps {
 export function Navbar({ isLoggedIn,setIsLoggedIn }: NavbarProps) {
 
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [displayName, setDisplayName] = useState<string>("User");
   const navigate = useNavigate();
 
   // const handleLogout = () => {
@@ -24,18 +26,38 @@ export function Navbar({ isLoggedIn,setIsLoggedIn }: NavbarProps) {
   //   }, 100);
   // };
   const handleLogout = () => {
+    // Clear localStorage
+    localStorage.removeItem("userInfo");
+    localStorage.removeItem("adminInfo");
+    
     // Update state and then navigate after a slight delay
     setIsLoggedIn(false);
     setShowUserMenu(false);
 
     // Using setTimeout to make sure state has updated before navigating
     setTimeout(() => {
-      navigate("/login"); // Navigate to home after a slight delay
-     
+      navigate("/"); // Navigate to home after logout
     }, 100); // 100ms delay to ensure state updates before navigating
   };
 
   const toggleUserMenu = () => setShowUserMenu((prev) => !prev);
+
+  useEffect(() => {
+    // Load user avatar from localStorage if available
+    const userInfoRaw = localStorage.getItem("userInfo");
+    if (userInfoRaw) {
+      try {
+        const user = JSON.parse(userInfoRaw);
+        const userId = user?.id;
+        const name = user?.name || user?.fullName || "User";
+        setDisplayName(name);
+        if (userId) {
+          const storedAvatar = localStorage.getItem(`userAvatar:${userId}`);
+          if (storedAvatar) setAvatarUrl(storedAvatar);
+        }
+      } catch {}
+    }
+  }, [isLoggedIn]);
 
   return (
     <div className="flex h-16 items-center justify-between bg-white shadow-md">
@@ -55,9 +77,9 @@ export function Navbar({ isLoggedIn,setIsLoggedIn }: NavbarProps) {
             <div
               className="flex items-center space-x-2 cursor-pointer"
               onClick={toggleUserMenu}
-            >  <img className="h-8 w-8 rounded-full" src="/men3.jpg" alt="Profile"  />
+            >  <img className="h-8 w-8 rounded-full" src={avatarUrl || "/men3.jpg"} alt="Profile"  />
               {/* <img className="h-8 w-8 rounded-full" src={img2} alt="Profile" /> */}
-              <span className="text-gray-900">Hi, User</span>
+              <span className="text-gray-900">Hi, {displayName}</span>
             </div>
 
             {/* User Menu Dropdown */}
@@ -71,7 +93,7 @@ export function Navbar({ isLoggedIn,setIsLoggedIn }: NavbarProps) {
           
           >
             {/* <img className="h-8 w-8 rounded-full" src={img} alt="Profile" /> */}
-            <img className="h-8 w-8 rounded-full" src="/user-interface.png" alt="User Interface" />
+            <img className="h-8 w-8 rounded-full" src={avatarUrl || "/user-interface.png"} alt="User Interface" />
 
             <Link className="text-gray-900" to="/login"  
           >
