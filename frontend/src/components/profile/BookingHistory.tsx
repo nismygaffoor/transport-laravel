@@ -66,6 +66,8 @@
 
 import { BookingDetails } from "../../types/booking";
 import { Button } from "../ui/Button";
+import { useState } from "react";
+import { Star } from "lucide-react";
 
 interface BookingHistoryProps {
   bookings: BookingDetails[];
@@ -73,8 +75,16 @@ interface BookingHistoryProps {
 }
 
 export function BookingHistory({ bookings, onReview }: BookingHistoryProps) {
+  const [reviewingBookingId, setReviewingBookingId] = useState<string | null>(null);
+  const [ratings, setRatings] = useState<Record<string, number>>({});
+  const [comments, setComments] = useState<Record<string, string>>({});
+  const [hoveredRatings, setHoveredRatings] = useState<Record<string, number>>({});
+
   const getStatusColor = (status: string) => {
-    switch (status) {
+    const normalizedStatus = String(status).toLowerCase().trim();
+    switch (normalizedStatus) {
+      case "booked":
+        return "bg-yellow-100 text-yellow-800";
       case "confirmed":
         return "bg-green-100 text-green-800";
       case "cancelled":
@@ -84,6 +94,24 @@ export function BookingHistory({ bookings, onReview }: BookingHistoryProps) {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  const getStatusLabel = (status: string) => {
+    const normalizedStatus = String(status).toLowerCase().trim();
+    return normalizedStatus.charAt(0).toUpperCase() + normalizedStatus.slice(1);
+  };
+
+  const handleSubmitReview = (bookingId: string) => {
+    const rating = ratings[bookingId] || 0;
+    const comment = comments[bookingId] || "";
+    if (rating === 0 || !comment) {
+      alert("Please provide both rating and comment");
+      return;
+    }
+    onReview(bookingId);
+    setReviewingBookingId(null);
+    setRatings({ ...ratings, [bookingId]: 0 });
+    setComments({ ...comments, [bookingId]: "" });
   };
 
   return (
@@ -103,7 +131,7 @@ export function BookingHistory({ bookings, onReview }: BookingHistoryProps) {
                 booking.status
               )}`}
             >
-              {booking.status}
+              {getStatusLabel(booking.status)}
             </div>
           </div>
           <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 sm:grid-cols-4">
@@ -127,27 +155,90 @@ export function BookingHistory({ bookings, onReview }: BookingHistoryProps) {
 
           {/* Show existing review if available */}
           {booking.review ? (
-            <div className="mt-4">
+            <div className="mt-4 border-t pt-4">
               <p className="text-sm font-semibold">Your Review:</p>
-              <p className="text-sm">{booking.review.comment}</p>
-              <p className="text-sm">Rating: {booking.review.rating}⭐</p>
-              <div className="mt-2 flex justify-end">
+              <div className="mt-2 flex items-center gap-2">
+                {[...Array(5)].map((_, i) => (
+                  <Star
+                    key={i}
+                    className={`h-4 w-4 ${
+                      i < booking.review!.rating
+                        ? "fill-yellow-400 text-yellow-400"
+                        : "text-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
+              <p className="mt-2 text-sm">{booking.review.comment}</p>
+              <div className="mt-3 flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onReview(booking.id)}
+                  onClick={() => setReviewingBookingId(booking.id)}
                 >
                   Edit Review
                 </Button>
               </div>
             </div>
+          ) : reviewingBookingId === booking.id ? (
+            <div className="mt-4 border-t pt-4 space-y-3">
+              <p className="text-sm font-semibold">Write a Review</p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                <div className="flex space-x-1">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setRatings({ ...ratings, [booking.id]: value })}
+                      onMouseEnter={() => setHoveredRatings({ ...hoveredRatings, [booking.id]: value })}
+                      onMouseLeave={() => setHoveredRatings({ ...hoveredRatings, [booking.id]: 0 })}
+                      className="focus:outline-none"
+                    >
+                      <Star
+                        className={`h-6 w-6 ${
+                          value <= (hoveredRatings[booking.id] || ratings[booking.id] || 0)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Your Review</label>
+                <textarea
+                  rows={3}
+                  value={comments[booking.id] || ""}
+                  onChange={(e) => setComments({ ...comments, [booking.id]: e.target.value })}
+                  className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder:text-gray-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Share your experience..."
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setReviewingBookingId(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={() => handleSubmitReview(booking.id)}
+                >
+                  Submit Review
+                </Button>
+              </div>
+            </div>
           ) : (
-            booking.status === "completed" && (
+            String(booking.status).toLowerCase().trim() === "completed" && (
               <div className="mt-4 flex justify-end">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => onReview(booking.id)}
+                  onClick={() => setReviewingBookingId(booking.id)}
                 >
                   Write Review
                 </Button>
