@@ -8,9 +8,9 @@ interface ReviewFormProps {
   onSubmit: (rating: number, comment: string) => void;
 }
 
-export function ReviewForm({ onSubmit }: ReviewFormProps) {
-  const [rating, setRating] = useState(0);
-  const [comment, setComment] = useState("");
+export function ReviewForm({ rating: initialRating = 0, comment: initialComment = "", onSubmit }: ReviewFormProps) {
+  const [rating, setRating] = useState(initialRating);
+  const [comment, setComment] = useState(initialComment);
   const [hoveredRating, setHoveredRating] = useState(0);
 
   const handleSubmit = (e: React.FormEvent) => {
