@@ -42,6 +42,11 @@ const AdminLogin: React.FC = () => {
         };
         login(adminInfo);
         navigate("/admin");
+      } else if (res.status === 401 && result.message === "You are not authorized to access admin panel") {
+        toast.error("You are not an admin. Redirecting to user login...");
+        setTimeout(() => {
+          navigate("/login");
+        }, 2000);
       } else {
         toast.error(result.message);
       }
