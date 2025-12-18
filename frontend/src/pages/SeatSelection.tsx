@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Seat, Bus } from "../types/bus";
 import { SeatMap } from "../components/bus/SeatMap";
+import { toast } from "react-toastify";
 
 export function SeatSelection() {
   const navigate = useNavigate();
@@ -50,13 +51,35 @@ export function SeatSelection() {
   }, [busId]);
 
   const handleSeatSelect = (selectedSeats: number[]) => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo") || "null");
+    console.log("Proceed to Book clicked");
+    const userInfo = localStorage.getItem("userInfo");
+    console.log("userInfo from localStorage:", userInfo);
 
-    if (!userInfo) {
+    if (!userInfo || userInfo === "null" || userInfo === "") {
+        console.log("User not logged in - redirecting to login");
+        toast.error("Please login first to proceed with booking");
         navigate("/login", { state: { from: `/select-seats/${busId}` } });
         return;
     }
 
+    try {
+      const parsedUserInfo = JSON.parse(userInfo);
+      console.log("Parsed userInfo:", parsedUserInfo);
+      
+      if (!parsedUserInfo || !parsedUserInfo.token) {
+        console.log("No token found - redirecting to login");
+        toast.error("Session expired. Please login again");
+        navigate("/login", { state: { from: `/select-seats/${busId}` } });
+        return;
+      }
+    } catch (error) {
+      console.log("Error parsing userInfo:", error);
+      toast.error("Please login first to proceed with booking");
+      navigate("/login", { state: { from: `/select-seats/${busId}` } });
+      return;
+    }
+
+    console.log("User is logged in - proceeding to booking confirmation");
     // Navigate to booking confirmation without any backend calls
     navigate("/booking-confirmation", {
         state: { busId, selectedSeats },
