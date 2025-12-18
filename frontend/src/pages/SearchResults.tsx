@@ -20,7 +20,7 @@ export function SearchResults() {
 
     setLoading(true);
 
-    fetch(`http://localhost:8000/api/buses?from=${searchParams.from}&to=${searchParams.to}&busType=${searchParams.busType}`)
+    fetch(`http://localhost:8000/api/buses?from=${searchParams.from}&to=${searchParams.to}&type=${searchParams.busType}`)
       .then(response => response.json())
       .then(data => {
         const buses = data.map((bus: any) => ({
@@ -28,7 +28,7 @@ export function SearchResults() {
           availableSeats: bus.available_seats, // Map available_seats to availableSeats 
           departureTime: bus.departure_time, // Map departure_time to departureTime 
           arrivalTime: bus.arrival_time, // Map arrival_time to arrivalTime
-          amenities: JSON.parse(bus.amenities) // Parse the amenities string into an array
+          amenities: Array.isArray(bus.amenities) ? bus.amenities : (typeof bus.amenities === 'string' ? JSON.parse(bus.amenities) : [])
         }));
         setFilteredBuses(buses);
         setLoading(false);
