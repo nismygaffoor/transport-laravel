@@ -53,28 +53,35 @@ class BusController extends Controller
 
     /**
      * Add a new bus.
-     */public function store(Request $request)
-{
-    try {
-        $validated = $request->validate([
-            'name' => 'required|string',
-            'operator' => 'required|string',
-            'type' => 'string',
-            'from' => 'required|string',
-            'to' => 'required|string',
-            'departureTime' => 'required|string',
-            'arrivalTime' => 'required|string',
-            'price' => 'required|numeric',
-            'availableSeats' => 'integer',
-            'totalSeats' => 'required|integer',
-        ]);
+     */
+    public function store(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string',
+                'operator' => 'required|string',
+                'type' => 'required|string',
+                'from' => 'required|string',
+                'to' => 'required|string',
+                'departure_time' => 'required|string',
+                'arrival_time' => 'required|string',
+                'price' => 'required|numeric',
+                'available_seats' => 'nullable|integer',
+                'total_seats' => 'required|integer',
+                'amenities' => 'nullable|array',
+            ]);
 
-        $bus = Bus::create($validated);
-        return response()->json($bus, 201);
-    } catch (\Exception $e) {
-        return response()->json(['error' => 'Failed to add route'], 500);
+            // Default available seats to total seats when not provided.
+            if (!isset($validated['available_seats'])) {
+                $validated['available_seats'] = $validated['total_seats'];
+            }
+
+            $bus = Bus::create($validated);
+            return response()->json($bus, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Failed to add bus'], 500);
+        }
     }
-}
 
     /**
      * Update a bus.
@@ -90,14 +97,19 @@ class BusController extends Controller
             'name' => 'sometimes|required|string|max:255',
             'operator' => 'sometimes|required|string|max:255',
             'type' => 'sometimes|required|string|max:50',
-            'departureTime' => 'sometimes|required',
-            'arrivalTime' => 'sometimes|required',
+            'departure_time' => 'sometimes|required',
+            'arrival_time' => 'sometimes|required',
             'from' => 'sometimes|required|string|max:255',
             'to' => 'sometimes|required|string|max:255',
             'price' => 'sometimes|required|numeric',
-            'totalSeats' => 'sometimes|required|integer',
+            'total_seats' => 'sometimes|required|integer',
+            'available_seats' => 'nullable|integer',
             'amenities' => 'nullable|array',
         ]);
+
+        if (!isset($validated['available_seats']) && isset($validated['total_seats'])) {
+            $validated['available_seats'] = $validated['total_seats'];
+        }
 
         $bus->update($validated);
 
