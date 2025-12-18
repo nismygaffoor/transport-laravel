@@ -3,19 +3,19 @@ import { Bus } from '../../types/bus';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 
-interface RouteManagementProps {
-  routes: Bus[];
-  onAdd: (route: Omit<Bus, 'id'>) => void;
-  onEdit: (id: string, route: Partial<Bus>) => void;
+interface BusManagementProps {
+  buses: Bus[];
+  onAdd: (bus: Omit<Bus, 'id'>) => void;
+  onEdit: (id: string, bus: Partial<Bus>) => void;
   onDelete: (id: string) => void;
 }
 
 export function RouteManagement({
-  routes,
+  buses,
   onAdd,
   onEdit,
   onDelete,
-}: RouteManagementProps) {
+}: BusManagementProps) {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
 
@@ -65,7 +65,7 @@ export function RouteManagement({
     <div className="space-y-6">
       <div className="flex justify-between">
         <h2 className="text-lg font-semibold">Bus Routes</h2>
-        <Button onClick={() => setIsAdding(true)}>Add New Route</Button>
+        <Button onClick={() => setIsAdding(true)}>Add New Bus</Button>
       </div>
 
       {(isAdding || editingId) && (
@@ -163,7 +163,7 @@ export function RouteManagement({
       )}
 
       <div className="space-y-4">
-        {routes.map((route) => (
+        {buses.map((route) => (
           <div
             key={route.id}
             className="rounded-lg border bg-white p-6 shadow-sm"
