@@ -13,14 +13,28 @@ class RouteController extends Controller
 
     public function store(Request $request)
     {
-        $route = Route::create($request->all());
+        $validated = $request->validate([
+            'from' => 'required|string|max:255',
+            'to' => 'required|string|max:255',
+            'departure_time' => 'required',
+            'arrival_time' => 'required',
+        ]);
+
+        $route = Route::create($validated);
         return response()->json($route, 201);
     }
 
     public function update(Request $request, $id)
     {
         $route = Route::findOrFail($id);
-        $route->update($request->all());
+        $validated = $request->validate([
+            'from' => 'sometimes|required|string|max:255',
+            'to' => 'sometimes|required|string|max:255',
+            'departure_time' => 'sometimes|required',
+            'arrival_time' => 'sometimes|required',
+        ]);
+
+        $route->update($validated);
         return response()->json($route, 200);
     }
 
