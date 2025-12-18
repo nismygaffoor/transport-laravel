@@ -68,11 +68,13 @@ export function BookingSuccess() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Seat Numbers</p>
-                <p className="font-medium text-gray-900">{booking.seats.join(', ')}</p>
+                <p className="font-medium text-gray-900">
+                  {booking.seats ? booking.seats.join(', ') : booking.seat_numbers || 'N/A'}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Total Amount (including service fee)</p>
-                <p className="font-medium text-gray-900">Rs. {booking.totalPrice }</p>
+                <p className="font-medium text-gray-900">Rs. {booking.totalPrice || booking.total_price || 0}</p>
               
 
               </div>
